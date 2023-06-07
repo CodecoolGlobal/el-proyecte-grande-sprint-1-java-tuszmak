@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 
@@ -90,7 +91,7 @@ class AnswerServiceTest {
         }));
     }
 
-        //Probably not needed
+    //Probably not needed
 //    @Test
 //    void empty_answer_list() {
 //        SampleData sampleData = new SampleData();
@@ -112,7 +113,35 @@ class AnswerServiceTest {
 //    }
 
     @Test
-    void modifyAnswer() {
+    void modify_answer_with_valid_data() {
+        UUID questionId = UUID.randomUUID();
+        UUID answerId = UUID.randomUUID();
+
+        Question question = questionService.getQuestionByPublicId(questionId);
+
+        Answer existingAnswer = new Answer(
+                answerId,
+                "original answer",
+                question,
+                new SampleData()
+        );
+
+        Answer modifiedAnswer = new Answer(
+                answerId,
+                "modified answer",
+                question,
+                new SampleData());
+
+        when(answerRepository.findAnswerByPublicId(answerId)).thenReturn(Optional.of(existingAnswer));
+        when(answerRepository.save(any(Answer.class))).thenReturn(modifiedAnswer);
+
+        verify(answerRepository).findAnswerByPublicId(answerId);
+        verify(answerRepository).save(argThat(resultAnswer -> resultAnswer
+                .getAnswer().equals(modifiedAnswer.getAnswer()) &&
+                !resultAnswer.equals(modifiedAnswer) &&
+                resultAnswer.equals(existingAnswer) &&
+                resultAnswer.getPublicId().equals(existingAnswer.getPublicId())
+        ));
     }
 
     @Test
